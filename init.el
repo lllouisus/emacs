@@ -1,4 +1,3 @@
-
 ;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
 ;;; Commentary:
 
@@ -7,29 +6,53 @@
 
 ;;; Code:
 
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-
 (setq user-full-name "Louis"
-      make-backup-files nil
-      auto-save-default nil
       auto-revert-use-notify nil
       auto-revert-verbose nil)
-
-(load-theme 'mine t)
 
 (recentf-mode 1)
 (setq recentf-max-menu-items 25)
 (setq recentf-max-saved-items 25)
 (global-set-key "\C-c\ \C-o" 'recentf-open-files)
 
-;;(rainbow-mode t)
-;;(electric-pair-mode t)                       ; 自动补全括号
-(column-number-mode t)                       ; 在 Mode line 上显示列号
-(global-auto-revert-mode t)                  ; 当另一程序修改了文件时，让 Emacs 及时刷新 Buffer
-(delete-selection-mode t)                    ; 选中文本后输入文本会替换文本（更符合我们习惯了的其它编辑器的逻辑）
-(setq inhibit-startup-message t)             ; 关闭启动 Emacs 时的欢迎界面
-(global-display-line-numbers-mode 1)         ; 在 Window 显示行号
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 
+
+;; about save
+;;(defvar my-auto-save-folder "~/.config/e_data/auto-save/") ;;folder for auto-saves
+;;(setq auto-save-list-file-prefix "~/.config/auto-save/.saves-") ;; set prefix for auto-saves)
+
+;; Create the autosave and backup directories.
+(defvar my-auto-save-folder "~/.config/e_data/auto-save/")  ;;folder for auto-saves
+(setq auto-save-list-file-prefix "~/.config/e_data/auto-save/.saves-")  ;;set prefix for auto-saves 
+(setq auto-save-file-name-transforms `((".*" ,my-auto-save-folder t))) ;;location for all auto-save files
+
+;; Prevent undo tree files from polluting your git repo
+(setq undo-tree-history-directory-alist '(("." . "~/.config/e_data/undo")))
+
+;; https://stackoverflow.com/questions/15302973/emacs-auto-save-why-are-files-not-stored-in-the-correct-folder
+(add-to-list 'auto-save-file-name-transforms
+             (list "\\(.+/\\)*\\(.*?\\)" (expand-file-name "\\2" my-auto-save-folder)) t)
+
+(setq
+   backup-by-copying t      ; don't clobber symlinks
+   backup-directory-alist
+    '(("." . "~/.config/e_data/bk"))    ; don't litter my fs tree
+   delete-old-versions t
+   kept-new-versions 6
+   kept-old-versions 2
+   version-control t)       ; use versioned backups
+;; ----------------------------------------------------------------------------------------------
+;; ----------------------------------------------------------------------------------------------
+
+(load-theme 'mine t)
+;;(rainbow-mode t)
+;;(electric-pair-mode t)                 
+(column-number-mode t)                   
+(global-auto-revert-mode t)                  ; 当另一程序修改了文件时，让 Emacs 及时刷新 Buffer
+(delete-selection-mode t)                
+(setq inhibit-startup-message t)         
+(global-display-line-numbers-mode 1)     
 
 (menu-bar-mode -1)
 ;;(global-hl-line-mode t)
@@ -76,9 +99,8 @@
 (defconst *spell-check-support-enabled* nil) ;; Enable with t if you prefer
 (defconst *is-a-mac* (eq system-type 'darwin))
 
-
-
-
+;;----------------------------------------------------------------------------------------------
+;;----------------------------------------------------------------------------------------------
 ;; packages
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -520,6 +542,12 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
 
 (use-package expand-region
   :bind ("M-@" . er/expand-region))
+
+
+
+
+
+
 
 
 
