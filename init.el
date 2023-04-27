@@ -1,117 +1,51 @@
-;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
-;;; Commentary:
-
-;; This file bootstraps the configuration, which is divided into
-;; a number of other files.
-
+;;; init.el --- Main init
 ;;; Code:
+(eval-after-load 'gnutls
+  '(add-to-list 'gnutls-trustfiles "/etc/ssl/cert.pem"))
 
-(setq user-full-name "Louis"
-      auto-revert-use-notify nil
-      auto-revert-verbose nil)
+(eval-when-compile
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  (add-to-list 'package-archives '("elpa" . "https://elpa.gnu.org/packages/") t)
+  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/") t)
+  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+  (setq gnutls-algorithm-priority  "NORMAL:-VERS-TLS1.3" ;; bug fix for gnu
+        package-enable-at-startup nil
+        package-archive-priorities '(("melpa"        . 200)
+                                     ("elpa"         . 100)
+                                     ("org"          . 75)
+                                     ("nongnu"       . 65)
+                                     ("gnu"          . 50)))  ;; Higher values are searched first.
+;(setq package-check-signature nil) ;; for gnu repository
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+  (require 'use-package)
+  (put 'use-package 'lisp-indent-function 1)
 
-(recentf-mode 1)
-(setq recentf-max-menu-items 25)
-(setq recentf-max-saved-items 25)
-(global-set-key "\C-c\ \C-o" 'recentf-open-files)
+  (use-package use-package-core
+    :custom
+    ; (use-package-verbose t)
+    (use-package-minimum-reported-time 0.005)
+    (use-package-enable-imenu-support t))
+  (use-package use-package-ensure-system-package
+    :ensure t)
+  )
 
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "lee/" (file-name-directory load-file-name)))
 
+(require 'functions_my)
 
-;; about save
-;;(defvar my-auto-save-folder "~/.config/e_data/auto-save/") ;;folder for auto-saves
-;;(setq auto-save-list-file-prefix "~/.config/auto-save/.saves-") ;; set prefix for auto-saves)
-
-;; Create the autosave and backup directories.
-(defvar my-auto-save-folder "~/.config/e_data/auto-save/")  ;;folder for auto-saves
-(setq auto-save-list-file-prefix "~/.config/e_data/auto-save/.saves-")  ;;set prefix for auto-saves 
-(setq auto-save-file-name-transforms `((".*" ,my-auto-save-folder t))) ;;location for all auto-save files
-
-;; Prevent undo tree files from polluting your git repo
-(setq undo-tree-history-directory-alist '(("." . "~/.config/e_data/undo")))
-
-;; https://stackoverflow.com/questions/15302973/emacs-auto-save-why-are-files-not-stored-in-the-correct-folder
-(add-to-list 'auto-save-file-name-transforms
-             (list "\\(.+/\\)*\\(.*?\\)" (expand-file-name "\\2" my-auto-save-folder)) t)
-
-(setq
-   backup-by-copying t      ; don't clobber symlinks
-   backup-directory-alist
-    '(("." . "~/.config/e_data/bk"))    ; don't litter my fs tree
-   delete-old-versions t
-   kept-new-versions 6
-   kept-old-versions 2
-   version-control t)       ; use versioned backups
-;; ----------------------------------------------------------------------------------------------
-;; ----------------------------------------------------------------------------------------------
-
-(load-theme 'mine t)
-;;(rainbow-mode t)
-;;(electric-pair-mode t)                 
-(column-number-mode t)                   
-(global-auto-revert-mode t)                  ; 当另一程序修改了文件时，让 Emacs 及时刷新 Buffer
-(delete-selection-mode t)                
-(setq inhibit-startup-message t)         
-(global-display-line-numbers-mode 1)     
-
-(menu-bar-mode -1)
-;;(global-hl-line-mode t)
-;;(global-auto-revert-mode 1)
-
-;;(set-face-background 'hl-line "#3e4446")
-
-;; Answering just 'y' or 'n' will do
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-;; tabs off by default
-(setq-default indent-tabs-mode nil)
-
-(show-paren-mode t)
-
-(global-set-key (kbd "C-c '") 'comment-or-uncomment-region) ; 为选中的代码加注释/去注释
-
-;; 自定义两个函数
-;; Faster move cursor
-(defun next-ten-lines()
-  "Move cursor to next 10 lines."
-  (interactive)
-  (next-line 6))
-
-(defun previous-ten-lines()
-  "Move cursor to previous 10 lines."
-  (interactive)
-  (previous-line 6))
-;; 绑定到快捷键
-(global-set-key (kbd "M-n") 'next-ten-lines)
-(global-set-key (kbd "M-p") 'previous-ten-lines)
-
-(global-set-key (kbd "M-/") 'hippie-expand)
-
-(let ((minver "27"))
-  (when (version< emacs-version minver)
-    (error "Your Emacs is too old -- this config requires v%s or higher" minver)))
-(when (version< emacs-version "27.5")
-  (message "Your Emacs is old, and some functionality in this config will be disabled. Please upgrade if possible."))
-
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory)) ; 设定源码加载路径
-;; (require 'init-benchmarking) ;; Measure startup time
-
-(defconst *spell-check-support-enabled* nil) ;; Enable with t if you prefer
-(defconst *is-a-mac* (eq system-type 'darwin))
-
-;;----------------------------------------------------------------------------------------------
-;;----------------------------------------------------------------------------------------------
-;; packages
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-;;(eval-when-compile
-;;  (require 'use-package))
-
-(package-install 'use-package)
-;;(package-refresh-contents)
+(require 'base) ; emacs default settings
+(require 'all-the-icons-rcp)
 
 
+;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;;;--------------------------------------------------------------       Package     -----------------------------------------------------------------------------------|
+;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+;;; hydra
 (use-package hydra
   :ensure t)
 
@@ -119,7 +53,7 @@
   :ensure t
   :after hydra) 
 
-;; Search
+;;; Search
 (use-package counsel
   :ensure t)
 
@@ -143,58 +77,38 @@
    :map minibuffer-local-map
    ("C-r" . counsel-minibuffer-history)))
 
-;; M-x history
+;;; Command History
 (use-package amx
   :ensure t
   :init (amx-mode))
 
-;; window
+;;; Swich Windows
 (use-package ace-window
   :ensure t
   :bind (("C-x o" . 'ace-window)))
 
-
- (use-package dashboard
-  :ensure t
-  :config
-  (setq dashboard-banner-logo-title "Welcome to Vim!") ;; 个性签名，随读者喜好设置
-  ;; (setq dashboard-projects-backend 'projectile) ;; 读者可以暂时注释掉这一行，等安装了 projectile 后再使用
-  (setq dashboard-startup-banner 'official) ;; 也可以自定义图片
-  (setq dashboard-items '((recents  . 6)   ;; 显示多少个最近文件
-			  (bookmarks . 6)  ;; 显示多少个最近书签
-			  (projects . 6)
-                          (agenda . 6)
-                          (registers . 6))) ;; 显示多少个最近项目
-  (dashboard-setup-startup-hook))
-
-;; mwim
+;;; About Move
 (use-package mwim
   :ensure t
   :bind
   ("C-a" . mwim-beginning-of-code-or-line)
   ("C-e" . mwim-end-of-code-or-line))
 
-
-;; good-scroll
-
-
-;; 
-(use-package which-key
+(use-package drag-stuff
   :ensure t
-  :init (which-key-mode))
+  :bind (("<M-up>" . drag-stuff-up)
+         ("<M-down>" . drag-stuff-down)))
 
-(use-package avy
+(use-package hungry-delete
   :ensure t
-  :bind
-  (("C-c f" . avy-goto-char-timer)))
+  :bind (("C-c DEL" . hungry-delete-backward)
+         ("C-c d" . hungry-delete-forward)))
 
-
-(use-package marginalia
+(use-package crux
   :ensure t
-  :init (marginalia-mode)
-  :bind (:map minibuffer-local-map
-	      ("M-A" . marginalia-cycle)))
+             :bind ("C-c k" . crux-smart-kill-line))
 
+;;; Undo-tree
 (use-package undo-tree
   :ensure t
   :init (global-undo-tree-mode)
@@ -207,10 +121,34 @@
   ("r"   undo-tree-redo)
   ("s"   undo-tree-save-history)
   ("l"   undo-tree-load-history)
-  ("v"   undo-tree-visualize "visualize" :color blue)
+  ("t"   undo-tree-visualize "visualize" :color blue)
   ("q"   nil "quit" :color blue)))
 
+;;; Good Scroll
+(use-package good-scroll
+  :ensure t
+  :if window-system          ; 在图形化界面时才使用这个插件
+  :init (good-scroll-mode))
 
+;;; Which Key
+(use-package which-key
+  :ensure t
+  :init (which-key-mode))
+
+;;; avy
+(use-package avy
+  :ensure t
+  :bind
+  (("C-c f" . avy-goto-char-timer)))
+
+;;; marginalia
+(use-package marginalia
+  :ensure t
+  :init (marginalia-mode)
+  :bind (:map minibuffer-local-map
+	      ("M-A" . marginalia-cycle)))
+
+;;; multiple-cursors
 (use-package multiple-cursors
   :ensure t
   :after hydra
@@ -220,7 +158,7 @@
    ("C-c n a" . mc/mark-all-like-this)
    ("C-c n n" . mc/mark-next-like-this)
    ("C-c n p" . mc/mark-previous-like-this)
-   )
+)
   :hydra (hydra-multiple-cursors
 		  (:hint nil)
 		  "
@@ -249,26 +187,45 @@ Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cu
 		  ("q" nil)))
 
 
+;;; dashboard
+ (use-package dashboard
+  :ensure t
+  :config
+  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  ;;(setq dashboard-startup-banner "~/.emacs.d/avatar.png")
+  (setq dashboard-banner-logo-title "Welcome to Vim!") ;; 个性签名，随读者喜好设置
+  (setq dashboard-projects-backend 'projectile) ;; 读者可以暂时注释掉这一行，等安装了 projectile 后再使用
+  (setq dashboard-items '((recents  . 6)   ;; 显示多少个最近文件
+			  (bookmarks . 6)  ;; 显示多少个最近书签
+			  (projects . 6)
+                          (agenda . 6)
+                          (registers . 6))) ;; 显示多少个最近项目
+  ;; Content is not centered by default. To center, set
+  (setq dashboard-center-content t)
+  
+  (dashboard-setup-startup-hook))
 
+;;; tiny 序号宏展开
 (use-package tiny
   :ensure t
   ;; 可选绑定快捷键，笔者个人感觉不绑定快捷键也无妨
   :bind
-  ("C-c ;" . tiny-expand))
+  ("C-;" . tiny-expand))
 
-
+;;; highlight-symbol
 (use-package highlight-symbol
   :ensure t
   :init (highlight-symbol-mode)
-  :bind ("C-c k" . highlight-symbol)) ;; 按下 F3 键就可高亮当前符号
+  :bind ("C-c w" . highlight-symbol)) ;; 按下 F3 键就可高亮当前符号
 
-
+;;; rainbow-delimiters
 (use-package rainbow-delimiters
   :ensure t
   :hook (prog-mode . rainbow-delimiters-mode))
 
-
-;; cmp
+;;; company
 (use-package company
   :ensure t
   :init (global-company-mode)
@@ -286,6 +243,7 @@ Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cu
   :hook (company-mode . company-box-mode))
 
 
+;;; snippet
 (use-package yasnippet
   :ensure t
   :hook
@@ -310,16 +268,15 @@ Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cu
   :ensure t
   :after yasnippet)
 
-(global-set-key (kbd "M-/") 'hippie-expand)
-
+;;: flycheck
 (use-package flycheck
   :ensure t
   :config
   (setq-default truncate-lines t)
-  ;;(setq truncate-lines nil) ; 如果单行信息很长会自动换行
   :hook
   (prog-mode . flycheck-mode))
 
+;;; About Lsp
 (use-package lsp-mode
   :ensure t
   :init
@@ -346,56 +303,8 @@ Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cu
   :ensure t
   :after (lsp-mode))
 
-(use-package c++-mode
-  :functions 			; suppress warnings
-  c-toggle-hungry-state
-  :hook
-  (c-mode . lsp-deferred)
-  (c++-mode . lsp-deferred)
-  (c++-mode . c-toggle-hungry-state))
 
-
-(use-package rust-mode
-  :ensure t
-  :functions dap-register-debug-template
-  :bind
-  ("C-c C-c" . rust-run)
-  :hook
-  (rust-mode . lsp-deferred)
-  :config
-  ;; debug
-  (require 'dap-gdb-lldb)
-  (dap-register-debug-template "Rust::LLDB Run Configuration"
-                               (list :type "lldb"
-				     :request "launch"
-			             :name "rust-lldb::Run"
-				     :gdbpath "rust-lldb"
-				     :target nil
-				     :cwd nil)))
-
-(use-package cargo
-  :ensure t
-  :hook
-  (rust-mode . cargo-minor-mode))
-
-
-
-(use-package typescript-mode
-  :ensure t
-  :mode "\\.ts\\'"
-  :hook (typescript-mode . lsp-deferred)
-  :config
-  (setq typescript-indent-level 2))
-
-(use-package lua-mode :ensure t)
-(use-package paredit :ensure t)
-(use-package dash :ensure t)
-(use-package markdown-mode :ensure t)
-(use-package yaml-mode :ensure t)
-(use-package json-mode :ensure t)
-(use-package pug-mode :ensure t)
-(use-package restclient :ensure t)
-
+;;; dap
 (use-package dap-mode
   :ensure t
   :after hydra lsp-mode
@@ -450,7 +359,6 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
    ("q" nil "quit" :color blue)
    ("Q" dap-disconnect :color red)))
 
-
 (use-package dap-lldb
   :after dap-mode
   :config
@@ -459,16 +367,7 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
   (setq dap-lldb-debugged-program-function
 		(lambda () (read-file-name "Select file to debug: "))))
 
-
-
-
-(use-package elfeed
-  :ensure t
-  :config
-  (setq elfeed-feeds
-        '("https://planet.emacslife.com/atom.xml"
-          "http://nullprogram.com/feed/")))
-
+;;; projectile
 (use-package projectile
   :ensure t
   :bind (("C-c p" . projectile-command-map))
@@ -481,8 +380,60 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
   :after (projectile)
   :init (counsel-projectile-mode))
 
+;;; magit
 (use-package magit
   :ensure t)
+
+;;; Language Server
+(use-package c++-mode
+  :functions 			; suppress warnings
+  c-toggle-hungry-state
+  :hook
+  (c-mode . lsp-deferred)
+  (c++-mode . lsp-deferred)
+  (c++-mode . c-toggle-hungry-state))
+
+
+(use-package rust-mode
+  :ensure t
+  :functions dap-register-debug-template
+  :bind
+  ("C-c C-c" . rust-run)
+  :hook
+  (rust-mode . lsp-deferred)
+  :config
+  ;; debug
+  (require 'dap-gdb-lldb)
+  (dap-register-debug-template "Rust::LLDB Run Configuration"
+                               (list :type "lldb"
+				     :request "launch"
+			             :name "rust-lldb::Run"
+				     :gdbpath "rust-lldb"
+				     :target nil
+				     :cwd nil)))
+
+(use-package cargo
+  :ensure t
+  :hook
+  (rust-mode . cargo-minor-mode))
+
+
+
+(use-package typescript-mode
+  :ensure t
+  :mode "\\.ts\\'"
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  (setq typescript-indent-level 2))
+
+(use-package lua-mode :ensure t)
+(use-package paredit :ensure t)
+(use-package dash :ensure t)
+(use-package markdown-mode :ensure t)
+(use-package yaml-mode :ensure t)
+(use-package json-mode :ensure t)
+(use-package pug-mode :ensure t)
+(use-package restclient :ensure t)
 
 (use-package lsp-pyright
   :ensure t
@@ -492,6 +443,7 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
 		  (require 'lsp-pyright)
 		  (lsp-deferred))))
 
+;;; treemacs
 (use-package treemacs
   :ensure t
   :defer t
@@ -516,9 +468,15 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
   :ensure t
   :after (treemacs lsp))
 
-(use-package autothemer
-  :ensure t)
+;;; elfeed
+(use-package elfeed
+  :ensure t
+  :config
+  (setq elfeed-feeds
+        '("https://planet.emacslife.com/atom.xml"
+          "http://nullprogram.com/feed/")))
 
+;;; 
 (use-package kurecolor
   :ensure t)
 
@@ -529,9 +487,9 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
 (use-package rainbow-mode
   :ensure t)
 (global-set-key [remap kill-ring-save] 'easy-kill)
+(rainbow-mode t)
 
 
-;;
 (use-package change-inner
   :ensure t)
 (require 'change-inner)
@@ -543,22 +501,29 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
 (use-package expand-region
   :bind ("M-@" . er/expand-region))
 
+;; themes
+(use-package doom-themes
+      :if window-system
+      :ensure t
+      :config
+      (load-theme 'doom-molokai t)
+      (doom-themes-org-config)
+      (doom-themes-visual-bell-config)
+      (fringe-mode -1))    
 
 
+;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;;;--------------------------------------------------------------------------  End  -----------------------------------------------------------------------------------|
+;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+(add-function :after after-focus-change-function
+  (defun me/garbage-collect-maybe ()
+    (unless (frame-focus-state)
+      (garbage-collect))))
 
-
-
-
-
-;; Adjust garbage collection thresholds during startup, and thereafter
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024)
-      company-idle-delay 0.0
-      company-minimum-prefix-length 1
-      create-lockfiles nil) ;; lock files will kill `npm start'
-
-(provide 'init)
-
+;;; Commentary:
+;; Main init file
+;; Local Variables:
+;; byte-compile-warnings: (not unresolved free-vars)
+;; End:
 ;;; init.el ends here
-
