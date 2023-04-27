@@ -35,12 +35,15 @@
 
 (add-to-list 'load-path (expand-file-name "lee/" (file-name-directory load-file-name)))
 
-(require 'functions_my)
+;;(require 'functions_my)
 
 (require 'base) ; emacs default settings
 (require 'all-the-icons-rcp)
 
+;;(set-frame-parameter (selected-frame) 'alpha '(20 . 10))
+;;(add-to-list 'default-frame-alist '(alpha . (20 . 10)))
 
+ 
 ;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;;;--------------------------------------------------------------       Package     -----------------------------------------------------------------------------------|
 ;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,10 +106,24 @@
   :ensure t
   :bind (("C-c DEL" . hungry-delete-backward)
          ("C-c d" . hungry-delete-forward)))
+(global-hungry-delete-mode)
 
 (use-package crux
   :ensure t
-             :bind ("C-c k" . crux-smart-kill-line))
+  :after hydra
+  :bind
+  ("C-c k" . crux-smart-kill-line)
+  ("C-c c" . hydra-crux/body)
+  :hydra (hydra-crux (:hint nil)
+"
+  _o_: smart-open-line  _f_: smart-kill-line _b_: kill-line-backwards _c_: kill-whole-line _j_: top-join-line "		     
+("o" crux-smart-open-line)
+("f" crux-smart-kill-line)
+("b" crux-kill-line-backwards)
+("c" crux-kill-whole-line)
+("j" crux-top-join-line)
+))
+(global-set-key [remap kill-line] #'crux-kill-and-join-forward)
 
 ;;; Undo-tree
 (use-package undo-tree
@@ -510,6 +527,10 @@ _Q_: Disconnect     _sl_: List locals        _bl_: Set log message
       (doom-themes-org-config)
       (doom-themes-visual-bell-config)
       (fringe-mode -1))    
+
+(use-package autothemer
+  :ensure t)
+
 
 
 ;;;---------------------------------------------------------------------------------------------------------------------------------------------------------------------

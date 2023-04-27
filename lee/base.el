@@ -13,7 +13,7 @@
 (setq inhibit-startup-message t)             ; 关闭启动 Emacs 时的欢迎界面
 (add-hook 'prog-mode-hook #'hs-minor-mode)   ; 编程模式下，可以折叠代码块
 (global-display-line-numbers-mode 1)         ; 在 Window 显示行号
-(when (display-graphic-p) (toggle-scroll-bar -1)) ; 图形界面时关闭滚动条
+ 
 
 (savehist-mode 1)                            ; （可选）打开 Buffer 历史记录保存
 ;;(add-to-list 'default-frame-alist '(width . 90))  ; （可选）设定启动图形界面时的初始 Frame 宽度（字符数）
@@ -41,6 +41,18 @@
 
 (global-set-key (kbd "M-/") 'hippie-expand)
 
+(defun toggle-transparency ()
+   (interactive)
+   (let ((alpha (frame-parameter nil 'alpha)))
+     (set-frame-parameter
+      nil 'alpha
+      (if (eql (cond ((numberp alpha) alpha)
+                     ((numberp (cdr alpha)) (cdr alpha))
+                     ;; Also handle undocumented (<active> <inactive>) form.
+                     ((numberp (cadr alpha)) (cadr alpha)))
+               100)
+          '(85 . 50) '(100 . 100)))))
+(global-set-key (kbd "C-c C-t") 'toggle-transparency)
 
 (provide 'base)
 ;;; Commentary:

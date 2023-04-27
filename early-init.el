@@ -47,10 +47,7 @@
   )
 
 ;; Themes
-;;(add-to-list 'custom-theme-load-path (expand-file-name "themes/" (file-name-directory load-file-name)))
-;;(load-theme 'doom-dark+ t)
-
-
+(add-to-list 'custom-theme-load-path (expand-file-name "themes/" (file-name-directory load-file-name)))
 
 
 ;; Prefer loading newest compiled .el file
@@ -73,12 +70,14 @@
           (inhibit-double-buffering . t)
           (vertical-scroll-bars     . right)))
 
+(add-hook 'prog-mode-hook #'show-paren-mode) ; 编程模式下，光标在括号上时高亮另一个括号
 (blink-cursor-mode              1)
 (column-number-mode             t)
 (global-font-lock-mode          1)
 (menu-bar-mode                  -1)
-(scroll-bar-mode                1)
+(scroll-bar-mode               -1)
 (tool-bar-mode                  -1)
+;;(toggle-scroll-bar -1)
 (tooltip-mode                   -1)
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region   'disabled nil)

@@ -45,6 +45,8 @@
   (mine-lsp-warn-fg    "#b58900")
   (mine-lsp-warn-bg    "#221704")
   (mine-grey           "#3d3d38")
+  (mine-bg             "#031111")
+  (mine-fg             "#839496")
   
   
 
@@ -52,7 +54,7 @@
   )
 
  ;; Customize faces
- ((default                   (:foreground mine-nil :background mine-nil))
+ ((default                   (:foreground mine-fg :background mine-bg))
   (cursor                    (:background mine-dk-orange))
   (region                    (:background mine-dk-purple))
   (mode-line                 (:background mine-mode-line :foreground mine-font))
