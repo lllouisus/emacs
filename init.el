@@ -13,7 +13,7 @@
 (require 'init-elpa)
 ;;(require 'init-ws-mode)
 
-;; Fersonal
+;; Personal
 (require 'p-theme)
 (require 'p-cmp)
 (require 'p-editor)
